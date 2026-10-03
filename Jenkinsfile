@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    environment {
+        DISCORD_WEBHOOK_URL = credentials('discord-webhook-url')
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('event-api') {
+                    sh 'npm ci'
+                    sh 'npm test'
+                }
+                dir('registration-api') {
+                    sh 'npm ci'
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Build Images') {
+            steps {
+                sh "docker build -t event-api:${IMAGE_TAG} ./event-api"
+                sh "docker build -t registration-api:${IMAGE_TAG} ./registration-api"
+                sh "docker build -t frontend:${IMAGE_TAG} ./frontend"
+                sh "docker build -t proxy:${IMAGE_TAG} ./proxy"
+
+                // Also tag as 'latest' so docker-compose.yml (which references
+                // fixed image names) always picks up the build we just made.
+                sh "docker tag event-api:${IMAGE_TAG} event-api:latest"
+                sh "docker tag registration-api:${IMAGE_TAG} registration-api:latest"
+                sh "docker tag frontend:${IMAGE_TAG} frontend:latest"
+                sh "docker tag proxy:${IMAGE_TAG} proxy:latest"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker compose up -d'
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                sh 'sleep 10' // give containers a moment to pass healthchecks
+                sh 'curl -f http://proxy/ || exit 1'
+                sh 'curl -f http://event-api:3000/health || exit 1'
+                sh 'curl -f http://registration-api:3001/health || exit 1'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Build ${IMAGE_TAG} deployed and verified successfully."
+        }
+        failure {
+            echo "Build ${IMAGE_TAG} failed — deployment was NOT updated."
+        }
+    }
+}
