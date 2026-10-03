@@ -4,7 +4,7 @@ const app = require('../src/server');
 describe('Event API', () => {
   test('GET /health returns 200 and status ok', async () => {
   const res = await request(app).get('/health');
-  expect(res.statusCode).toBe(999); // intentionally wrong — proves the quality gate works
+  expect(res.statusCode).toBe(200);
   expect(res.body.status).toBe('ok');
 });
 
