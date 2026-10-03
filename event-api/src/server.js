@@ -1,6 +1,7 @@
 const express = require('express');
 const config = require('./config/environment');
 const eventsRouter = require('./routes/events');
+const studentsRouter = require('./routes/students');
 
 const app = express();
 app.use(express.json());
@@ -10,6 +11,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/events', eventsRouter);
+app.use('/students', studentsRouter);
 
 if (require.main === module) {
   app.listen(config.port, () => {

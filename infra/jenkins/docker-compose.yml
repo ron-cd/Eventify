@@ -1,0 +1,21 @@
+services:
+  jenkins:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jenkins-network
+      - student-org-network
+
+networks:
+  jenkins-network:
+    driver: bridge
+  student-org-network:
+    external: true
+
+volumes:
+  jenkins_home:

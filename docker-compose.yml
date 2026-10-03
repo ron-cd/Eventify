@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - student-org-db-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - student-org-network
+    # No "ports:" — the database must never be reachable from the host.
+
+  event-api:
+    image: event-api:${IMAGE_TAG:-latest}
+    build: ./event-api
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - student-org-network
+    # No "ports:" — only the proxy is reachable from the host.
+
+  registration-api:
+    image: registration-api:${IMAGE_TAG:-latest}
+    build: ./registration-api
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - student-org-network
+
+  frontend:
+    image: frontend:${IMAGE_TAG:-latest}
+    build: ./frontend
+    restart: unless-stopped
+    networks:
+      - student-org-network
+
+  proxy:
+    image: proxy:${IMAGE_TAG:-latest}
+    build: ./proxy
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      frontend:
+        condition: service_healthy
+      event-api:
+        condition: service_healthy
+      registration-api:
+        condition: service_healthy
+    networks:
+      - student-org-network
+
+networks:
+  student-org-network:
+    name: student-org-network
+    driver: bridge
+
+volumes:
+  student-org-db-data:
