@@ -26,5 +26,6 @@ USER jenkins
 
 RUN jenkins-plugin-cli --plugins \
     git \
+    github \
     workflow-aggregator \
     docker-workflow
