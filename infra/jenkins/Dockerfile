@@ -13,10 +13,14 @@ RUN apt-get update && \
     apt-get install -y docker-ce-cli docker-compose-plugin && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x (matches the version pinned in event-api and registration-api Dockerfiles)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
+
+# Grant the jenkins user access to the mounted Docker socket.
+# On Docker Desktop, the socket is typically owned by the root group (GID 0),
+# so adding jenkins to that group lets pipeline steps run "docker build" etc.
+RUN usermod -aG root jenkins
 
 USER jenkins
 
