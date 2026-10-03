@@ -1,11 +1,12 @@
 pipeline {
     agent any
 
-    environment {
+        environment {
         DISCORD_WEBHOOK_URL = credentials('discord-webhook-url')
         DB_NAME = 'student_org'
         DB_USER = 'student_org'
         DB_PASSWORD = credentials('db-password')
+        ADMIN_PASSWORD = credentials('admin-password')
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         COMPOSE_PROJECT_NAME = 'eventify'
     }

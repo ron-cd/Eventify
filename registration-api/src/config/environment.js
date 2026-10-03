@@ -10,4 +10,5 @@ module.exports = {
     password: process.env.DB_PASSWORD || 'change-me',
   },
   webhookUrl: process.env.DISCORD_WEBHOOK_URL || null,
+  adminPassword: process.env.ADMIN_PASSWORD || null,
 };
