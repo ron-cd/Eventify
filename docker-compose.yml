@@ -30,12 +30,12 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
     networks:
       - student-org-network
-    # No "ports:" — only the proxy is reachable from the host.
 
   registration-api:
     image: registration-api:${IMAGE_TAG:-latest}
@@ -49,6 +49,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
