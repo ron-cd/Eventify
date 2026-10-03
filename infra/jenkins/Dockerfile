@@ -13,6 +13,11 @@ RUN apt-get update && \
     apt-get install -y docker-ce-cli docker-compose-plugin && \
     rm -rf /var/lib/apt/lists/*
 
+# Install Node.js 20.x (matches the version pinned in event-api and registration-api Dockerfiles)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
 USER jenkins
 
 RUN jenkins-plugin-cli --plugins \
