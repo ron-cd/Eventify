@@ -20,9 +20,10 @@ CREATE TABLE IF NOT EXISTS events (
     location VARCHAR(150),
     capacity INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(20) NOT NULL DEFAULT 'open',
+    category VARCHAR(30) NOT NULL DEFAULT 'general',
     closed_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
+)
 
 -- ============================
 -- REGISTRATIONS

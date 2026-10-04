@@ -10,8 +10,28 @@
   <link rel="stylesheet" href="css/admin.css" />
 </head>
 <body>
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="bg-blob bg-blob-1"></span>
+    <span class="bg-blob bg-blob-2"></span>
+    <span class="bg-blob bg-blob-3"></span>
+  </div>
 
-    <button id="themeToggleBtn" class="theme-toggle-fixed" aria-label="Toggle dark mode">🌙</button>
+  <button id="themeToggleBtn" class="theme-toggle-fixed" aria-label="Toggle dark mode">
+    <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+    <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </button>
 
   <!-- LOGIN GATE -->
   <main id="loginView" class="login-screen">
@@ -24,14 +44,9 @@
         <input type="password" id="adminPasswordInput" autocomplete="current-password" required />
         <p id="loginError" class="field-error visually-hidden" role="alert"></p>
         <button type="submit" class="btn-primary" style="width:100%; margin-top: var(--space-3);">
-          Sign in
+          <span class="btn-label">Sign in</span>
         </button>
       </form>
-    </div>
-    <div class="login-decor" aria-hidden="true">
-      <span class="blob blob-amber"></span>
-      <span class="blob blob-teal"></span>
-      <span class="blob blob-pink"></span>
     </div>
   </main>
 
@@ -71,28 +86,30 @@
       <div id="eventsBento" class="events-bento"></div>
     </section>
 
-        <!-- REGISTRATIONS VIEW -->
-    <section id="registrationsView" class="panel-view hidden">
+    <!-- REGISTRATIONS VIEW -->
+      <section id="registrationsView" class="panel-view hidden">
       <div class="panel-header">
         <h2>Registrations</h2>
-        <select id="registrationsEventSelect" style="max-width: 280px;"></select>
       </div>
+      <div id="registrationsEventTabs" class="event-tabs"></div>
+      <div id="registrationsSummary" class="reg-summary"></div>
       <div id="registrationsTable" class="registrations-list"></div>
     </section>
 
-      <!-- STUDENTS VIEW -->
+    <!-- STUDENTS VIEW -->
     <section id="studentsView" class="panel-view hidden">
       <div class="panel-header">
         <h2>Students</h2>
         <div style="display:flex; gap: var(--space-2); align-items:center;">
           <input type="file" id="bulkUploadInput" accept=".xlsx,.csv" class="visually-hidden" />
-          <button id="bulkUploadBtn" class="btn-primary">Upload Excel</button>
+          <button id="bulkUploadBtn" class="btn-primary">Upload Excel/CSV</button>
         </div>
       </div>
       <p class="upload-hint">File needs a header row with a column for student ID/number and one for name. An email column is optional.</p>
       <div id="uploadResult"></div>
       <div id="studentsTable" class="registrations-list"></div>
     </section>
+  </div>
 
   <!-- EVENT MODAL (create/edit) -->
   <div id="eventModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
@@ -100,6 +117,9 @@
       <div class="modal-header">
         <h3 id="eventModalTitle">New Event</h3>
         <button id="closeModalBtn" class="btn-ghost" aria-label="Close dialog">✕</button>
+      </div>
+      <div id="closedNotice" class="closed-notice hidden">
+        🔒 This event is closed. Closed events are final and cannot be edited.
       </div>
       <form id="eventForm">
         <input type="hidden" id="eventId" />
@@ -123,16 +143,29 @@
         <label for="eventLocation">Location</label>
         <input type="text" id="eventLocation" />
 
-        <label for="eventStatus">Status</label>
-        <select id="eventStatus">
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+        <div class="form-row">
+          <div>
+            <label for="eventStatus">Status</label>
+            <select id="eventStatus">
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label for="eventCategory">Category</label>
+            <select id="eventCategory">
+              <option value="general">General</option>
+              <option value="workshop">Workshop</option>
+              <option value="social">Social</option>
+              <option value="academic">Academic</option>
+            </select>
+          </div>
+        </div>
 
         <p id="eventFormError" class="field-error visually-hidden" role="alert"></p>
-        <button type="submit" class="btn-primary" style="width:100%; margin-top: var(--space-3);">
-          Save Event
+        <button type="submit" id="eventSubmitBtn" class="btn-primary" style="width:100%; margin-top: var(--space-3);">
+          <span class="btn-label">Save Event</span>
         </button>
       </form>
     </div>
