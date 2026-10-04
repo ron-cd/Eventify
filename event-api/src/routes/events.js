@@ -7,5 +7,6 @@ router.get('/', eventController.getAllEvents);
 router.get('/:id', eventController.getEventById);
 router.post('/', requireAdmin, eventController.createEvent);
 router.put('/:id', requireAdmin, eventController.updateEvent);
+router.post('/cleanup', requireAdmin, eventController.cleanupClosedEvents);
 
 module.exports = router;

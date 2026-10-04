@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eventify Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+    <button id="themeToggleBtn" class="theme-toggle-fixed" aria-label="Toggle dark mode">🌙</button>
+
+  <!-- LOGIN GATE -->
+  <main id="loginView" class="login-screen">
+    <div class="login-card">
+      <div class="login-badge">Admin</div>
+      <h1>Eventify Admin</h1>
+      <p class="login-sub">Enter the admin password to manage events and registrations.</p>
+      <form id="loginForm">
+        <label for="adminPasswordInput">Password</label>
+        <input type="password" id="adminPasswordInput" autocomplete="current-password" required />
+        <p id="loginError" class="field-error visually-hidden" role="alert"></p>
+        <button type="submit" class="btn-primary" style="width:100%; margin-top: var(--space-3);">
+          Sign in
+        </button>
+      </form>
+    </div>
+    <div class="login-decor" aria-hidden="true">
+      <span class="blob blob-amber"></span>
+      <span class="blob blob-teal"></span>
+      <span class="blob blob-pink"></span>
+    </div>
+  </main>
+
+  <!-- DASHBOARD -->
+  <div id="dashboardView" class="dashboard hidden">
+    <header class="topbar">
+      <div class="brand">Eventify <span>Admin</span></div>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-view="events" role="tab" aria-selected="true">Events</button>
+        <button class="tab" data-view="registrations" role="tab" aria-selected="false">Registrations</button>
+        <button class="tab" data-view="students" role="tab" aria-selected="false">Students</button>
+      </nav>
+      <button id="logoutBtn" class="btn-ghost">Log out</button>
+    </header>
+
+    <section class="stats-bento">
+      <div class="stat-card stat-primary">
+        <span class="stat-label">Total Events</span>
+        <span class="stat-value" id="statEvents">—</span>
+      </div>
+      <div class="stat-card stat-teal">
+        <span class="stat-label">Total Registrations</span>
+        <span class="stat-value" id="statRegistrations">—</span>
+      </div>
+      <div class="stat-card stat-amber">
+        <span class="stat-label">Total Students</span>
+        <span class="stat-value" id="statStudents">—</span>
+      </div>
+    </section>
+
+    <!-- EVENTS VIEW -->
+    <section id="eventsView" class="panel-view">
+      <div class="panel-header">
+        <h2>Events</h2>
+        <button id="newEventBtn" class="btn-primary">+ New Event</button>
+      </div>
+      <div id="eventsBento" class="events-bento"></div>
+    </section>
+
+        <!-- REGISTRATIONS VIEW -->
+    <section id="registrationsView" class="panel-view hidden">
+      <div class="panel-header">
+        <h2>Registrations</h2>
+        <select id="registrationsEventSelect" style="max-width: 280px;"></select>
+      </div>
+      <div id="registrationsTable" class="registrations-list"></div>
+    </section>
+
+      <!-- STUDENTS VIEW -->
+    <section id="studentsView" class="panel-view hidden">
+      <div class="panel-header">
+        <h2>Students</h2>
+        <div style="display:flex; gap: var(--space-2); align-items:center;">
+          <input type="file" id="bulkUploadInput" accept=".xlsx,.csv" class="visually-hidden" />
+          <button id="bulkUploadBtn" class="btn-primary">Upload Excel</button>
+        </div>
+      </div>
+      <p class="upload-hint">File needs a header row with a column for student ID/number and one for name. An email column is optional.</p>
+      <div id="uploadResult"></div>
+      <div id="studentsTable" class="registrations-list"></div>
+    </section>
+
+  <!-- EVENT MODAL (create/edit) -->
+  <div id="eventModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="eventModalTitle">New Event</h3>
+        <button id="closeModalBtn" class="btn-ghost" aria-label="Close dialog">✕</button>
+      </div>
+      <form id="eventForm">
+        <input type="hidden" id="eventId" />
+        <label for="eventTitle">Title</label>
+        <input type="text" id="eventTitle" required />
+
+        <label for="eventDescription">Description</label>
+        <textarea id="eventDescription" rows="3"></textarea>
+
+        <div class="form-row">
+          <div>
+            <label for="eventDate">Date &amp; Time</label>
+            <input type="datetime-local" id="eventDate" required />
+          </div>
+          <div>
+            <label for="eventCapacity">Capacity</label>
+            <input type="number" id="eventCapacity" min="0" value="0" />
+          </div>
+        </div>
+
+        <label for="eventLocation">Location</label>
+        <input type="text" id="eventLocation" />
+
+        <label for="eventStatus">Status</label>
+        <select id="eventStatus">
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+
+        <p id="eventFormError" class="field-error visually-hidden" role="alert"></p>
+        <button type="submit" class="btn-primary" style="width:100%; margin-top: var(--space-3);">
+          Save Event
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
