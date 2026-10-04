@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS students (
     id SERIAL PRIMARY KEY,
     student_number VARCHAR(20) UNIQUE NOT NULL,
     name VARCHAR(150) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
+    email VARCHAR(150) UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS events (
     event_date TIMESTAMP NOT NULL,
     location VARCHAR(150),
     capacity INTEGER NOT NULL DEFAULT 0,
-    status VARCHAR(20) NOT NULL DEFAULT 'open',  -- open | closed | cancelled
+    status VARCHAR(20) NOT NULL DEFAULT 'open',
+    closed_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -30,9 +31,9 @@ CREATE TABLE IF NOT EXISTS registrations (
     id SERIAL PRIMARY KEY,
     student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL DEFAULT 'registered',  -- registered | cancelled | attended
+    status VARCHAR(20) NOT NULL DEFAULT 'registered',
     registered_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE (student_id, event_id)  -- prevents duplicate registrations for the same event
+    UNIQUE (student_id, event_id)
 );
 
 -- ============================

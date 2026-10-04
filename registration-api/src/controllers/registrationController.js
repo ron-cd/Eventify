@@ -8,7 +8,6 @@ async function createRegistration(req, res) {
       return res.status(400).json({ error: 'student_id and event_id are required' });
     }
 
-    // Check event exists and get its details + capacity
     const eventResult = await db.query('SELECT * FROM events WHERE id = $1', [event_id]);
     if (eventResult.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
@@ -19,7 +18,6 @@ async function createRegistration(req, res) {
       return res.status(400).json({ error: 'Event is not open for registration' });
     }
 
-    // Check capacity
     const countResult = await db.query(
       `SELECT COUNT(*) FROM registrations WHERE event_id = $1 AND status = 'registered'`,
       [event_id]
@@ -29,14 +27,12 @@ async function createRegistration(req, res) {
       return res.status(400).json({ error: 'Event is at full capacity' });
     }
 
-    // Get student name for the webhook message
     const studentResult = await db.query('SELECT * FROM students WHERE id = $1', [student_id]);
     if (studentResult.rows.length === 0) {
       return res.status(404).json({ error: 'Student not found' });
     }
     const student = studentResult.rows[0];
 
-    // Insert registration (DB UNIQUE constraint blocks duplicates)
     let registration;
     try {
       const insertResult = await db.query(
@@ -45,13 +41,12 @@ async function createRegistration(req, res) {
       );
       registration = insertResult.rows[0];
     } catch (err) {
-      if (err.code === '23505') { // unique_violation
+      if (err.code === '23505') {
         return res.status(409).json({ error: 'Student is already registered for this event' });
       }
       throw err;
     }
 
-    // Registration succeeded — fire webhook, but don't let it affect the response
     await sendRegistrationNotification({
       studentName: student.name,
       eventName: event.title,
@@ -83,7 +78,14 @@ async function getRegistrationById(req, res) {
 async function getRegistrationsByEvent(req, res) {
   try {
     const { eventId } = req.params;
-    const result = await db.query('SELECT * FROM registrations WHERE event_id = $1', [eventId]);
+    const result = await db.query(
+      `SELECT r.id, r.status, r.registered_at, s.name, s.student_number, s.email
+       FROM registrations r
+       JOIN students s ON r.student_id = s.id
+       WHERE r.event_id = $1
+       ORDER BY r.registered_at ASC`,
+      [eventId]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching registrations:', err.message);
@@ -112,9 +114,52 @@ async function updateRegistrationStatus(req, res) {
   }
 }
 
+async function exportEventAttendance(req, res) {
+  try {
+    const { eventId } = req.params;
+
+    const eventResult = await db.query(
+      'SELECT title, event_date, location FROM events WHERE id = $1',
+      [eventId]
+    );
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const attendanceResult = await db.query(
+      `SELECT s.name, s.student_number, s.email, r.status, r.registered_at
+       FROM registrations r
+       JOIN students s ON r.student_id = s.id
+       WHERE r.event_id = $1
+       ORDER BY r.registered_at ASC`,
+      [eventId]
+    );
+
+    res.json({
+      event: eventResult.rows[0],
+      attendees: attendanceResult.rows,
+    });
+  } catch (err) {
+    console.error('Error exporting attendance:', err.message);
+    res.status(500).json({ error: 'Failed to export attendance' });
+  }
+}
+
+async function getTotalRegistrations(req, res) {
+  try {
+    const result = await db.query('SELECT COUNT(*) FROM registrations');
+    res.json({ total: parseInt(result.rows[0].count, 10) });
+  } catch (err) {
+    console.error('Error counting registrations:', err.message);
+    res.status(500).json({ error: 'Failed to count registrations' });
+  }
+}
+
 module.exports = {
   createRegistration,
   getRegistrationById,
   getRegistrationsByEvent,
   updateRegistrationStatus,
+  exportEventAttendance,
+  getTotalRegistrations,
 };
