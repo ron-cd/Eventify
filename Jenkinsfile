@@ -1,5 +1,19 @@
 def stageOrder = ['Checkout', 'Test', 'Build Images', 'Deploy', 'Smoke Test']
 def currentStageName = 'Checkout'
+def eventApiHealth = 'unreachable'
+def registrationApiHealth = 'unreachable'
+
+def summarizeHealth(String label, String json) {
+    if (json == null || json.trim() == '' || json.trim() == 'unreachable') {
+        return "❌ ${label} unreachable"
+    }
+    def statusMatch = (json =~ /"status"\s*:\s*"([^"]+)"/)
+    def versionMatch = (json =~ /"version"\s*:\s*"?([^",}]+)"?/)
+    def status = statusMatch.find() ? statusMatch.group(1) : 'unknown'
+    def version = versionMatch.find() ? versionMatch.group(1) : 'n/a'
+    def icon = (status == 'ok') ? '✅' : '⚠️'
+    return "${icon} ${label} ${status} (v${version})"
+}
 
 pipeline {
     agent any
@@ -65,6 +79,16 @@ pipeline {
                 script { currentStageName = 'Smoke Test' }
                 sh 'sleep 10'
                 sh 'curl -f http://proxy/ || exit 1'
+                script {
+                    eventApiHealth = sh(
+                        script: 'curl -sf http://event-api:3000/health || echo "unreachable"',
+                        returnStdout: true
+                    ).trim()
+                    registrationApiHealth = sh(
+                        script: 'curl -sf http://registration-api:3001/health || echo "unreachable"',
+                        returnStdout: true
+                    ).trim()
+                }
                 sh 'curl -f http://event-api:3000/health || exit 1'
                 sh 'curl -f http://registration-api:3001/health || exit 1'
             }
@@ -99,6 +123,8 @@ pipeline {
                     ? "✅ Eventify Build #${env.BUILD_NUMBER} succeeded"
                     : "❌ Eventify Build #${env.BUILD_NUMBER} failed at ${currentStageName}"
 
+                def healthSummary = "${summarizeHealth('event-api', eventApiHealth)}\n${summarizeHealth('registration-api', registrationApiHealth)}"
+
                 def payload = [
                     embeds: [[
                         title: title,
@@ -109,6 +135,7 @@ pipeline {
                             [name: 'Commit', value: "${shortSha} by ${commitAuthor}", inline: true],
                             [name: 'Duration', value: currentBuild.durationString.replace(' and counting', ''), inline: true],
                             [name: 'Message', value: commitMsg, inline: false],
+                            [name: 'Health Check', value: healthSummary, inline: false],
                             [name: 'Stages', value: stageLinesStr, inline: false],
                         ],
                         url: env.BUILD_URL,
