@@ -1,3 +1,6 @@
+def stageOrder = ['Checkout', 'Test', 'Build Images', 'Deploy', 'Smoke Test']
+def currentStageName = 'Checkout'
+
 pipeline {
     agent any
 
@@ -16,12 +19,14 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                script { currentStageName = 'Checkout' }
                 checkout scm
             }
         }
 
         stage('Test') {
             steps {
+                script { currentStageName = 'Test' }
                 dir('event-api') {
                     sh 'npm ci'
                     sh 'npm test'
@@ -35,6 +40,7 @@ pipeline {
 
         stage('Build Images') {
             steps {
+                script { currentStageName = 'Build Images' }
                 sh "docker build -t event-api:${IMAGE_TAG} ./event-api"
                 sh "docker build -t registration-api:${IMAGE_TAG} ./registration-api"
                 sh "docker build -t frontend:${IMAGE_TAG} ./frontend"
@@ -49,12 +55,14 @@ pipeline {
 
         stage('Deploy') {
             steps {
+                script { currentStageName = 'Deploy' }
                 sh 'docker compose up -d'
             }
         }
 
         stage('Smoke Test') {
             steps {
+                script { currentStageName = 'Smoke Test' }
                 sh 'sleep 10'
                 sh 'curl -f http://proxy/ || exit 1'
                 sh 'curl -f http://event-api:3000/health || exit 1'
@@ -64,21 +72,50 @@ pipeline {
     }
 
     post {
-        success {
-            sh """
-                curl -s -H "Content-Type: application/json" \
-                -d '{"content": "✅ **Eventify Build #${IMAGE_TAG} succeeded** — deployed and verified.\\n${env.BUILD_URL}"}' \
-                "${CI_DISCORD_WEBHOOK_URL}"
-            """
-            echo "Build ${IMAGE_TAG} deployed and verified successfully."
-        }
-        failure {
-            sh """
-                curl -s -H "Content-Type: application/json" \
-                -d '{"content": "❌ **Eventify Build #${IMAGE_TAG} failed** — deployment was NOT updated.\\n${env.BUILD_URL}"}' \
-                "${CI_DISCORD_WEBHOOK_URL}"
-            """
-            echo "Build ${IMAGE_TAG} failed — deployment was NOT updated."
+        always {
+            script {
+                def failedIndex = stageOrder.indexOf(currentStageName)
+                def isSuccess = currentBuild.currentResult == 'SUCCESS'
+
+                def stageLines = stageOrder.withIndex().collect { name, i ->
+                    if (isSuccess) return "✅ ${name}"
+                    if (i < failedIndex) return "✅ ${name}"
+                    if (i == failedIndex) return "❌ ${name}"
+                    return "⏭️ ${name} (skipped)"
+                }.join('\n')
+
+                def commitMsg = sh(script: "git log -1 --pretty=%s", returnStdout: true).trim()
+                def commitAuthor = sh(script: "git log -1 --pretty=%an", returnStdout: true).trim()
+                def shortSha = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                def branch = env.GIT_BRANCH ?: 'unknown'
+
+                def title = isSuccess
+                    ? "✅ Eventify Build #${env.BUILD_NUMBER} succeeded"
+                    : "❌ Eventify Build #${env.BUILD_NUMBER} failed at ${currentStageName}"
+
+                def payload = [
+                    embeds: [[
+                        title: title,
+                        color: isSuccess ? 3066993 : 15158332,
+                        fields: [
+                            [name: 'Branch', value: branch, inline: true],
+                            [name: 'Commit', value: "${shortSha} by ${commitAuthor}", inline: true],
+                            [name: 'Duration', value: currentBuild.durationString.replace(' and counting', ''), inline: true],
+                            [name: 'Message', value: commitMsg, inline: false],
+                            [name: 'Stages', value: stageLines, inline: false],
+                        ],
+                        url: env.BUILD_URL,
+                    ]]
+                ]
+
+                writeFile file: 'discord_payload.json', text: groovy.json.JsonOutput.toJson(payload)
+
+                sh '''
+                    curl -s -H "Content-Type: application/json" \
+                    -d @discord_payload.json \
+                    "$CI_DISCORD_WEBHOOK_URL"
+                '''
+            }
         }
     }
 }
