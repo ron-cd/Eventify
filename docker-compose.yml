@@ -31,6 +31,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      BUILD_VERSION: ${IMAGE_TAG:-dev}
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +51,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      BUILD_VERSION: ${IMAGE_TAG:-dev}
     depends_on:
       db:
         condition: service_healthy

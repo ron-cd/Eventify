@@ -104,6 +104,7 @@ pipeline {
                         title: title,
                         color: isSuccess ? 3066993 : 15158332,
                         fields: [
+                            [name: 'Image Tag', value: "${IMAGE_TAG}", inline: true],
                             [name: 'Branch', value: branch, inline: true],
                             [name: 'Commit', value: "${shortSha} by ${commitAuthor}", inline: true],
                             [name: 'Duration', value: currentBuild.durationString.replace(' and counting', ''), inline: true],
