@@ -71,18 +71,24 @@ pipeline {
         }
     }
 
-    post {
+        post {
         always {
             script {
                 def failedIndex = stageOrder.indexOf(currentStageName)
                 def isSuccess = currentBuild.currentResult == 'SUCCESS'
 
-                def stageLines = stageOrder.withIndex().collect { name, i ->
-                    if (isSuccess) return "✅ ${name}"
-                    if (i < failedIndex) return "✅ ${name}"
-                    if (i == failedIndex) return "❌ ${name}"
-                    return "⏭️ ${name} (skipped)"
-                }.join('\n')
+                def stageLines = []
+                for (int i = 0; i < stageOrder.size(); i++) {
+                    def name = stageOrder[i]
+                    if (isSuccess || i < failedIndex) {
+                        stageLines.add("✅ ${name}")
+                    } else if (i == failedIndex) {
+                        stageLines.add("❌ ${name}")
+                    } else {
+                        stageLines.add("⏭️ ${name} (skipped)")
+                    }
+                }
+                def stageLinesStr = stageLines.join('\n')
 
                 def commitMsg = sh(script: "git log -1 --pretty=%s", returnStdout: true).trim()
                 def commitAuthor = sh(script: "git log -1 --pretty=%an", returnStdout: true).trim()
@@ -102,7 +108,7 @@ pipeline {
                             [name: 'Commit', value: "${shortSha} by ${commitAuthor}", inline: true],
                             [name: 'Duration', value: currentBuild.durationString.replace(' and counting', ''), inline: true],
                             [name: 'Message', value: commitMsg, inline: false],
-                            [name: 'Stages', value: stageLines, inline: false],
+                            [name: 'Stages', value: stageLinesStr, inline: false],
                         ],
                         url: env.BUILD_URL,
                     ]]
@@ -117,5 +123,5 @@ pipeline {
                 '''
             }
         }
-    }
+    }git add Jenkinsfile
 }
