@@ -10,8 +10,6 @@ const app = express();
 app.use(express.json());
 
 app.get('/health', async (req, res) => {
-  const startedAt = process.env.BUILD_VERSION ? null : null; // placeholder, no-op
-
   try {
     await db.query('SELECT 1');
     res.status(200).json({

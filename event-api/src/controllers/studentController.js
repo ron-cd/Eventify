@@ -71,7 +71,7 @@ async function bulkUploadStudents(req, res) {
     let added = 0;
     const skipped = [];
 
-      for (const row of dataRows) {
+    for (const row of dataRows) {
       const student_number = String(row[idCol]).trim();
       const name = String(row[nameCol]).trim();
       const email = emailCol !== -1 && row[emailCol] ? String(row[emailCol]).trim() : null;
