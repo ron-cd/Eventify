@@ -71,7 +71,7 @@ pipeline {
         }
     }
 
-        post {
+    post {
         always {
             script {
                 def failedIndex = stageOrder.indexOf(currentStageName)
@@ -123,5 +123,5 @@ pipeline {
                 '''
             }
         }
-    }git add Jenkinsfile
+    }
 }
