@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS events (
     category VARCHAR(30) NOT NULL DEFAULT 'general',
     closed_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
-)
+);
 
 -- ============================
 -- REGISTRATIONS
