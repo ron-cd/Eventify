@@ -44,5 +44,4 @@ INSERT INTO events (title, description, event_date, location, capacity, status)
 VALUES
     ('IT Organization General Assembly', 'Mandatory general assembly for all IT org members.', '2026-10-15 13:00:00', 'Main Auditorium', 100, 'open'),
     ('Web Dev Workshop', 'Hands-on workshop on modern web development.', '2026-10-22 09:00:00', 'Computer Lab 3', 40, 'open'),
-    ('Capstone Orientation', 'Orientation for capstone project requirements.', '2026-10-29 10:00:00', 'Room 204', 60, 'open')
 ON CONFLICT DO NOTHING;
