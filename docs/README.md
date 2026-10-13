@@ -195,14 +195,6 @@ This is a course project, so external contributions aren't expected, but if you'
 
 A push to `main` automatically triggers the Jenkins pipeline described above.
 
-## Team
-
-Built as a SYSIN Final Project.
-
-- **Application, infrastructure, and CI/CD:** [name]
-- **Proposal, documentation, and presentation materials:** [names]
-
-See [`docs/TEAM_CONTRIBUTIONS.md`](docs/TEAM_CONTRIBUTIONS.md) for individual contribution details.
 
 ## License
 
